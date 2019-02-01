@@ -21,53 +21,53 @@ class switch(object):
             return False
 
 class Vechile:
-    def event(self, e: Event, value: float):
+    def event(self, e: Event):
         for case in switch(e):
             if case(Stop):
-                self.stop(e, value)
+                self.stop(e)
                 break
             if case(MoveForward):
-                self.move_forward(e, value)
+                self.move_forward(e)
                 break
             if case(MoveRight):
-                self.move_right(e, value)
+                self.move_right(e)
                 break
             if case(Turn):
-                self.turn(e, value)
+                self.turn(e)
                 break
             if case(LookUp):
-                self.look_up(e, value)
+                self.look_up(e)
                 break
             if case(TurnRate):
-                self.turn_rate(e, value)
+                self.turn_rate(e)
                 break
             if case(LookUpRate):
-                self.look_up_rate(e, value)
+                self.look_up_rate(e)
                 break
             if case():
                 break
 
-    def stop(self, e: Stop, value: float):
-        print("stop: ", value)
+    def stop(self, e: Stop):
+        print("stop: ", e.value)
 
-    def move_forward(self, e: MoveForward, value: float):
-        print("move forward: ", value)
+    def move_forward(self, e: MoveForward):
+        print("move forward: ", e.value)
         
-    def move_right(self, e: MoveRight, value: float):
-        print("move right: ", value)
+    def move_right(self, e: MoveRight):
+        print("move right: ", e.value)
 
-    def turn(self, e: Turn, value: float):
-        print("turn: ", value)
+    def turn(self, e: Turn):
+        print("turn: ", e.value)
 
-    def look_up(self, e: Turn, value: float):
-        print("look up: ", value)
+    def look_up(self, e: Turn):
+        print("look up: ", e.value)
 
-    def turn_rate(self, e: Turn, value: float):
-        print("turn_rate: ", value)
+    def turn_rate(self, e: Turn):
+        print("turn_rate: ", e.value)
     
-    def look_up_rate(self, e: Turn, value: float):
-        print("look up rate: ", value)
+    def look_up_rate(self, e: Turn):
+        print("look up rate: ", e.value)
 
 if __name__ == '__main__':
     v = Vechile()
-    v.event(Stop(),0)
+    v.event(Stop(0.0))

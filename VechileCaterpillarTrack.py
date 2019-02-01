@@ -3,19 +3,22 @@ from Vechile import Vechile
 
 class Caterpillar(Vechile):
     
-    def move_forward(self, e: MoveForward, value: float):
+    def move_forward(self, e: MoveForward):
         """
-        value 正为前进，负为后退
-        """
-        pass
-
-    def turn(self, e: Turn, value: float):
-        """
-        value 负为左转，正为右转
+        e.value 正为前进，负为后退，零为取消当前动作。
         """
         pass
 
-    def stop(self, e: Stop, value: float):
+    def turn(self, e: Turn):
+        """
+        e.value 负为左转，正为右转，零为取消当前动作。
+        """
+        pass
+
+    def stop(self, e: Stop):
+        """
+        e.value 1为强制停止，0为取消强制停止。强制停止时应忽略其他输入。
+        """
         pass
 
     def __forward(self):
