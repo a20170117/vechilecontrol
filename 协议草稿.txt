@@ -1,0 +1,100 @@
+1. device 通过 HTTP 请求向 server 注册自身，建立会话获取 session_id 。 session_id 由 server 生成，有一定的有效期。  server 维护注册设备 device_id 与 session_id 的对应关系，在会话超时后删除 device 。
+2. device 使用 session_id 向  server 发起 WebSocket 请求建立连接。如失败，需重新注册，获取新的 session_id 。 连接成功建立后， device 上线。
+3. device 上线后， server 通过心跳维护 device 的在线状态。心跳带有编号，由 server 向 device 发起， device 收到心跳信息后，立即回应以同编号的心跳信息。 server 计算与 device 间的延迟发送给 client 。
+4. client （可选）向 server 发起带编号的心跳， server 收到后立即回应以同编号的心跳，client 可由此估算与 server 之间的延迟。
+5. server 若超过一段时间未收到来自 device 的心跳，则 device 下线。 device 下线一段时间后，会话超时，注销设备。
+6. client 向 server 发起 HTTP 请求获取 device 列表， server 根据 client 的权限回应以 client 可访问的 device 列表。 device 信息包括 device_id, device 推流的rtsp服务器地址 server_ip 和端口 server_port ，和rtsp密码 token 。rtsp密码由 server 生成并向rtsp服务注册用户、密码。
+7. rtsp url拼接规则：
+   rtsp://$(user_id):$(token)@$(server_ip):$(server_port)/live/$(device_id)
+8. client 向 server 发起 WebSocket 请求建立连接。
+9. client 携带身份认证信息通过 WebSocket 信道向 server 发起控制 device 请求。 server 根据 client 权限及 device 状态给予响应。 server 维护 client 与 device 的控制关系，并转发控制指令。
+
+# HTTP
+1. 注册 device 向服务注册自己
+请求：
+{
+"request": "register",
+"device_id": string_devid,
+"rtsp_server": string_ip,
+"rtsp_port": int_port
+}
+应答：
+{
+"errno": int,
+"session_id": string_sesid,
+}
+错误码 errno:
+-1: 未知错误
+0: 成功
+1: id已存在
+
+2. 获取 device 列表
+请求：
+{
+"request": "get_device_list",
+"user_id": string_usrid,
+... （预留-认证信息）
+}
+应答：（根据用户权限）
+{
+"device_list": [
+ [0] -> 
+ {
+  "device_id": string_devid,
+  "rtsp_server": string_ip,
+  "rtsp_port": int_port,
+  "token": string_token
+ },
+ [1] -> ...
+}
+rtsp url拼接规则：
+rtsp://$(user_id):$(token)@$(server_ip):$(server_port)/live/$(device_id)
+
+# WebSocket
+3. 指令控制
+client -> server
+{
+ "type": "motion",
+ "code": string_hex,
+ "param": {
+  // 用于特殊按键，如VR手柄面板。
+ }
+}
+code编码：
+16进制表示数字的字符串（带或不带0x头都行，推荐不带；大小写均可），对应关系查VKCode.py。例如："0x1c0", "DE"。
+低位两字节表示虚拟按键码，高位字节表示掩码。例如"1C0"表示"`"按下（1左边的字符，仅用于举例，该字符不会出现在本协议实际应用中）。
+掩码表：
+| 掩码  | 与掩码按位与后的含义  |
+| ----- | ----- |
+| 0x100 | 1表示按下，0表示抬起。|
+| 0x200 | 1表示携带了额外参数。 |
+
+4. device 相关心跳
+发起 server -> device, client
+{
+ "type": "hb",
+ "num": int64
+}
+回应 device -> server
+{
+ "type": "hb",
+ "session_id": string_sesid
+ "num": int64
+}
+监控 server -> client
+{
+ "type": "hb"
+ "delay": int (ms)
+}
+
+5. client 相关心跳
+发起 client -> server
+{
+ "type": "hb",
+ "num": int64
+}
+回应 server -> client
+{
+ "type": "hb"
+ "num": int64
+}
