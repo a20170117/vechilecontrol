@@ -2,26 +2,40 @@ class Event:
     def __init__(self):
         self.param = 0.0
 
-class Stop(Event):
+class Motion(Event):
+    '''
+    动作事件
+    '''
+    def __init__(self, value: float):
+        self.__value = value # 动作幅度
+    
+    @property
+    def value(self):
+        '''
+        获取动作幅度，默认不提供setter
+        '''
+        return self.__value
+
+class Stop(Motion):
     pass
 
-class MoveForward(Event):
+class MoveForward(Motion):
     pass
 
-class MoveRight(Event):
+class MoveRight(Motion):
     pass
 
-class Turn(Event):
+class Turn(Motion):
     pass
 
-class LookUp(Event):
+class LookUp(Motion):
     pass
 
-class TurnRate(Event):
+class TurnRate(Motion):
     pass
 
-class LookUpRate(Event):
+class LookUpRate(Motion):
     pass
 
 
-__all__=["Event", "MoveForward", "MoveRight", "Turn", "LookUp", "TurnRate", "LookUpRate", "Stop"]
+__all__=["Event", "Motion", "MoveForward", "MoveRight", "Turn", "LookUp", "TurnRate", "LookUpRate", "Stop"]
