@@ -15,13 +15,31 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
 
     def open(self):
-        self.write_message("Hello")
+        # self.write_message("Hello")
+        pass
 
     def on_message(self, msg):
-        self.write_message("you said: "+msg)
+        # self.write_message("you said: "+msg)
+        data = json.loads(msg)
+        if data['type'] == 'login':
+            ret = self.__check_sessioin(data['session_id'])
+            res = {
+                'type': 'login',
+                'errno': ret
+            }
+            self.write_message(json.dumps(res))
+        elif data['type'] == 'hb':
+            # TODO: 更新设备心跳
+            pass
 
     def on_close(self):
         print ("closed")
+
+    def __check_sessioin(self, session_id):
+        # TODO: 检查会话是否存在
+        # 若是，该会话对应设备状态切换为在线，通知客户端
+        # 否则，返回错误
+        return 0
 
 class HTTPHandler(tornado.web.RequestHandler):
     def __init__(self, application, request, **kwargs):

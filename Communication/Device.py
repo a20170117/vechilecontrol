@@ -28,10 +28,10 @@ class Device(WebSocketClient):
 
     def register(self):
         headers = httputil.HTTPHeaders({'Content-Type': APPLICATION_JSON})
-        register_url = 'http://'+self.__config['http_server_addr']+':'+self.__config['http_server_port']+self.__config['http_register_url']
+        register_url = 'http://'+self.__config['http_server_addr']+':'+self.__config['http_server_port']+self.__config['http_url']
         post_data = {
             "request": "register",
-            "device_id": self.__config['divice_id'],
+            "device_id": self.__config['device_id'],
             "rtsp_server": self.__config['rtsp_server_addr'],
             "rtsp_port": self.__config['rtsp_server_port']
         }
@@ -45,14 +45,42 @@ class Device(WebSocketClient):
             body=body
         )
         http_client = httpclient.HTTPClient()
-        response = http_client.fetch(request)
+        response = json.loads(http_client.fetch(request).body.decode())
 
-        print(response.body)
+        print(response)
+        self.__session_id = response['session_id']
+        return response['errno']
+
+    def __login(self):
+        msg = {
+            'type': 'login',
+            'device_id': self.__config['device_id'],
+            'session_id': self.__session_id
+        }
+
+        self.send(msg)
 
     def on_connection_success(self):
-        pass
+        self.__login()
+
+    def on_connection_close(self, reason):
+        print('closed!!!!!!!!!!!!!!!!!!'+' because of '+reason)
 
     def on_message(self, msg: dict):
+        print(msg)
+        data = json.loads(msg)
+        if data['type'] == 'login':
+            if data['errno'] == 0:
+                print('login success')
+            else:
+                # 登陆失败，重新注册并登陆
+                ret = self.register()
+                if ret != 0:
+                    # 注册失败
+                    raise ValueError
+                self.__login()
+
+        return
         command = self.__parse_msg(msg)
 
         if command['control'] == 'motion':
@@ -108,6 +136,10 @@ class Device(WebSocketClient):
 
         return command
 
+    def connect_ws(self):
+        ws_url = 'ws://'+self.__config['ws_server_addr']+':'+self.__config['ws_server_port']+self.__config['ws_url']
+        self.connect(ws_url)
+
 if __name__ == '__main__':
     car = Vechile()
 
@@ -115,25 +147,29 @@ if __name__ == '__main__':
 
     # TODO: 从配置文件中读取
     config = {
-        'divice_id': 'caterpillar001',
+        'device_id': 'caterpillar001',
         'http_server_addr': '127.0.0.1',
         'http_server_port': '8888',
-        'http_register_url': '/',
+        'http_url': '/',
         'ws_server_addr': '127.0.0.1',
         'ws_server_port': '8888',
+        'ws_url': '/ws',
         'rtsp_server_addr': '127.0.0.1',
         'rtsp_server_port': 8554
     }
 
     client = Device(io_loop, car, config)
 
-    client.register()
+    result = client.register()
 
-    # ws_url = 'ws://127.0.0.1:8888/ws'
+    if result != 0:
+        raise ValueError
+    else:
+        pass
 
-    # client.connect(ws_url)
+    client.connect_ws()
 
-    # try:
-    #     io_loop.start()
-    # except KeyboardInterrupt:
-    #     client.close()
+    try:
+        io_loop.start()
+    except KeyboardInterrupt:
+        client.close()
