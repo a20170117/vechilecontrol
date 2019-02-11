@@ -21,6 +21,10 @@ class switch(object):
             return False
 
 class Vechile:
+    """
+    用于执行控制指令，控制硬件。
+    不同硬件设备继承本类分别实现。
+    """
     def event(self, e: Event):
         for case in switch(e):
             if case(Stop):
