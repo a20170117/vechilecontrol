@@ -70,7 +70,7 @@ code编码：
 | 0x200 | 1表示携带了额外参数。 |
 
 4. device 相关心跳
-发起 server -> device, client
+发起 server -> device
 {
  "type": "hb",
  "num": int64
@@ -98,3 +98,18 @@ code编码：
  "type": "hb"
  "num": int64
 }
+
+6. device 登陆
+发起 device -> server
+{
+    'type': 'login',
+    'session_id': string_sesid
+}
+回应 server -> device
+{
+    'type': 'login',
+    'errno': int
+}
+errno:
+0: 成功
+1: 会话过期，需重新注册
