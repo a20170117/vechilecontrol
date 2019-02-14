@@ -70,15 +70,20 @@ class Device(WebSocketClient):
         print(msg)
         data = json.loads(msg)
         if data['type'] == 'login':
+            # 检查登陆返回值
             if data['errno'] == 0:
                 print('login success')
             else:
+                print('login failed')
                 # 登陆失败，重新注册并登陆
                 ret = self.register()
                 if ret != 0:
                     # 注册失败
                     raise ValueError
                 self.__login()
+        elif data['type'] == 'hb':
+            data['session_id'] = self.__session_id
+            self.send(data)
 
         return
         command = self.__parse_msg(msg)
