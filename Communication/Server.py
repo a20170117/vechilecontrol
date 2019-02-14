@@ -9,6 +9,7 @@ import threading
 import random
 import string
 import time
+import asyncio
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -58,7 +59,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 'type': 'hb',
                 'num': count
             }
-            # handler.write_message(json.dumps(hb_msg))
+            handler.write_message(json.dumps(hb_msg))
             device['hb_list'].append(hb_msg)
             device['timeout'] += 500
             count += 1
@@ -144,6 +145,7 @@ if __name__ == '__main__':
         "device_list": [],
         "session_timeout": 5000, # ms
     }
+    asyncio.set_event_loop(asyncio.new_event_loop())
     app = Application([
         (r"/ws",WSHandler, {"context": ctx}),
         (r"/",HTTPHandler, {"context": ctx})
